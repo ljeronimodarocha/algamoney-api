@@ -1,7 +1,7 @@
 create table pessoa(
 	codigo BIGINT(20) PRIMARY KEY AUTO_INCREMENT,
     nome VARCHAR(50) NOT NULL,
-    ativo BOOL DEFAULT FALSE,
+    ativo BOOL NOT NULL,
     logadouro VARCHAR(50),
     numero VARCHAR(50),
     complemento VARCHAR(50),
