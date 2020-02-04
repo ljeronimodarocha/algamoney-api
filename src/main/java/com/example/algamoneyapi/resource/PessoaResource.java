@@ -15,34 +15,34 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import com.example.algamoneyapi.model.Categoria;
-import com.example.algamoneyapi.repository.CategoriaRepository;
+import com.example.algamoneyapi.model.Pessoa;
+import com.example.algamoneyapi.repository.PessoaRepository;
 
 @RestController
-@RequestMapping("/categorias")
-public class CategoriaResource {
+@RequestMapping("/pessoas")
+public class PessoaResource {
 	@Autowired
-	private CategoriaRepository repo;
+	PessoaRepository pessoaRepository;
 
 	@GetMapping
-	public List<Categoria> listar() {
-		return repo.findAll();
+	public List<Pessoa> listar() {
+		return pessoaRepository.findAll();
 	}
 
 	@PostMapping
-	public ResponseEntity<Categoria> criar(@Valid @RequestBody Categoria categoria) {
-		Categoria categoriaSalva = repo.save(categoria);
+	public ResponseEntity<Pessoa> criar(@Valid @RequestBody Pessoa pessoa) {
+		Pessoa PessoaSalva = pessoaRepository.save(pessoa);
 		URI uri = ServletUriComponentsBuilder.fromCurrentRequestUri().path("{codigo}")
-				.buildAndExpand(categoriaSalva.getCodigo()).toUri();
-		return ResponseEntity.created(uri).body(categoriaSalva);
+				.buildAndExpand(PessoaSalva.getCodigo()).toUri();
+		return ResponseEntity.created(uri).body(PessoaSalva);
 	}
 
 	@GetMapping("/{codigo}")
-	public ResponseEntity<Categoria> buscaPeloCodigo(@PathVariable Long codigo) {
-		Categoria c = repo.findById(codigo).orElse(null);
-		if (c != null)
-			return ResponseEntity.ok().body(c);
-
+	public ResponseEntity<Pessoa> buscaPeloCodigo(@PathVariable Long codigo) {
+		Pessoa pessoa = pessoaRepository.findById(codigo).orElse(null);
+		if (pessoa != null)
+			return ResponseEntity.ok().body(pessoa);
 		return ResponseEntity.notFound().build();
 	}
+
 }
