@@ -1,6 +1,7 @@
 package com.example.algamoneyapi.exceptionhandler;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,8 +15,10 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+import org.springframework.dao.EmptyResultDataAccessException;
 
 @ControllerAdvice
 public class AlgarmoneyExceptionHandler extends ResponseEntityExceptionHandler {
@@ -24,36 +27,47 @@ public class AlgarmoneyExceptionHandler extends ResponseEntityExceptionHandler {
 	private MessageSource messageSource;
 
 	@Override
-	protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex,
-			HttpHeaders headers, HttpStatus status, WebRequest request) {
-		String mensagemUsuário = messageSource.getMessage("mensagem.invalida", null, LocaleContextHolder.getLocale());
-		String mensagemDesenvolvedor = ex.getMessage().toString();
+	protected ResponseEntity<Object> handleHttpMessageNotReadable(final HttpMessageNotReadableException ex,
+			final HttpHeaders headers, final HttpStatus status, final WebRequest request) {
+		final String mensagemUsuário = messageSource.getMessage("mensagem.invalida", null,
+				LocaleContextHolder.getLocale());
+		final String mensagemDesenvolvedor = ex.getMessage().toString();
 		return super.handleExceptionInternal(ex, new Erro(mensagemUsuário, mensagemDesenvolvedor), headers,
 				HttpStatus.BAD_REQUEST, request);
 	}
 
 	@Override
-	protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
-			HttpHeaders headers, HttpStatus status, WebRequest request) {
-		List<Erro> erros = criaListaDeErros(ex.getBindingResult());
+	protected ResponseEntity<Object> handleMethodArgumentNotValid(final MethodArgumentNotValidException ex,
+			final HttpHeaders headers, final HttpStatus status, final WebRequest request) {
+		final List<Erro> erros = criaListaDeErros(ex.getBindingResult());
 		return super.handleExceptionInternal(ex, erros, headers, HttpStatus.BAD_REQUEST, request);
 	}
 
-	private List<Erro> criaListaDeErros(BindingResult bindingResult) {
-		List<Erro> erros = new ArrayList<>();
-		for (FieldError fieldError : bindingResult.getFieldErrors()) {
-			String mensagemUsuário = messageSource.getMessage(fieldError, LocaleContextHolder.getLocale());
-			String mensagemDesenvolvedor = fieldError.toString();
+	@ExceptionHandler({ EmptyResultDataAccessException.class })
+	public ResponseEntity<Object> handleEmptyResultDataAccessException(EmptyResultDataAccessException ex,
+			WebRequest request) {
+		final String mensagemUsuário = messageSource.getMessage("recurso.não-encontrado", null,
+				LocaleContextHolder.getLocale());
+		final String mensagemDesenvolvedor = ex.toString();
+		List<Erro> erros = Arrays.asList(new Erro(mensagemUsuário, mensagemDesenvolvedor));
+		return super.handleExceptionInternal(ex, erros, new HttpHeaders(), HttpStatus.NOT_FOUND, request);
+	}
+
+	private List<Erro> criaListaDeErros(final BindingResult bindingResult) {
+		final List<Erro> erros = new ArrayList<>();
+		for (final FieldError fieldError : bindingResult.getFieldErrors()) {
+			final String mensagemUsuário = messageSource.getMessage(fieldError, LocaleContextHolder.getLocale());
+			final String mensagemDesenvolvedor = fieldError.toString();
 			erros.add(new Erro(mensagemUsuário, mensagemDesenvolvedor));
 		}
 		return erros;
 	}
 
 	public static class Erro {
-		private String mensagemUsuário;
-		private String mensagemDesenvolvedor;
+		private final String mensagemUsuário;
+		private final String mensagemDesenvolvedor;
 
-		public Erro(String mensagemUsuário, String mensagemDesenvolvedor) {
+		public Erro(final String mensagemUsuário, final String mensagemDesenvolvedor) {
 			this.mensagemUsuário = mensagemUsuário;
 			this.mensagemDesenvolvedor = mensagemDesenvolvedor;
 		}
