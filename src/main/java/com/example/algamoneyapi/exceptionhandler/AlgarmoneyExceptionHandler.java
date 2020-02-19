@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.persistence.EntityNotFoundException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -31,7 +33,7 @@ public class AlgarmoneyExceptionHandler extends ResponseEntityExceptionHandler {
 			final HttpHeaders headers, final HttpStatus status, final WebRequest request) {
 		final String mensagemUsuário = messageSource.getMessage("mensagem.invalida", null,
 				LocaleContextHolder.getLocale());
-		final String mensagemDesenvolvedor = ex.getMessage().toString();
+		final String mensagemDesenvolvedor = ex.getCause() != null ? ex.getCause().toString() : ex.toString();
 		return super.handleExceptionInternal(ex, new Erro(mensagemUsuário, mensagemDesenvolvedor), headers,
 				HttpStatus.BAD_REQUEST, request);
 	}
@@ -46,6 +48,15 @@ public class AlgarmoneyExceptionHandler extends ResponseEntityExceptionHandler {
 	@ExceptionHandler({ EmptyResultDataAccessException.class })
 	public ResponseEntity<Object> handleEmptyResultDataAccessException(EmptyResultDataAccessException ex,
 			WebRequest request) {
+		final String mensagemUsuário = messageSource.getMessage("recurso.não-encontrado", null,
+				LocaleContextHolder.getLocale());
+		final String mensagemDesenvolvedor = ex.toString();
+		List<Erro> erros = Arrays.asList(new Erro(mensagemUsuário, mensagemDesenvolvedor));
+		return super.handleExceptionInternal(ex, erros, new HttpHeaders(), HttpStatus.NOT_FOUND, request);
+	}
+
+	@ExceptionHandler({ EntityNotFoundException.class })
+	public ResponseEntity<Object> handleEntityNotFoundException(EntityNotFoundException ex, WebRequest request) {
 		final String mensagemUsuário = messageSource.getMessage("recurso.não-encontrado", null,
 				LocaleContextHolder.getLocale());
 		final String mensagemDesenvolvedor = ex.toString();
